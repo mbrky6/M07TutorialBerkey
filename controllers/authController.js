@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 // Error handler
 const handleErrors = (err) => {
@@ -21,6 +22,12 @@ const handleErrors = (err) => {
     return errors;
 }
 
+// JWT generator
+const maxAge = 60 * 60 * 24 * 3 // 3 days in seconds
+const createToken = (id) => {
+    return jwt.sign({id}, "This totally won't get posted to GitHub", {expiresIn: maxAge}); // jwt.sign(body, secret, options) Do not post secrets to GitHub
+}
+
 module.exports.signup_get = (req, res) => {
 
     res.render("signup");
@@ -31,7 +38,9 @@ module.exports.signup_post = async(req, res) => {
 
     try {
         const user = await User.create({email, password});
-        res.status(201).json(user);
+        const token = createToken(user._id);
+        res.cookie("jwt", token, { httpOnly: true, maxAge: 1000 * maxAge});
+        res.status(201).json({user: user._id});
     }
     catch (err) {
         const errors = handleErrors(err);
