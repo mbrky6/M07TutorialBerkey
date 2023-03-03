@@ -14,15 +14,40 @@
 
 <script>
     const form = document.querySelector("form");
+    const emailError = document.querySelector(".email.error");
+    const passwordError = document.querySelector(".password.error");
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        // Reset error notices
+        emailError.innerHTML = "";
+        passwordError.innerHTML = "";
 
         // Get the values
         const email = form.email.value;
         const password = form.password.value;
 
-        console.log(email, password);
+        try {
+            const res = await fetch("/login", {
+                method: "POST",
+                body: JSON.stringify({email, password}),
+                headers: {"Content-Type": "application/json"}
+            });
+            const data = await res.json();
+            console.log(data);
+            if (data.errors) {
+                // Display errors
+                emailError.innerHTML = data.errors.email;
+                passwordError.innerHTML = data.errors.password;
+            } // if (errors in the data)
+            if (data.user) {
+                location.assign("/");
+            } // if (login successful)
+        } // try
+        catch (err) {
+            console.log(err);
+        } // catch
     });
 </script>
 
